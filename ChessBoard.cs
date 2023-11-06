@@ -56,6 +56,12 @@ namespace Chess
                 _board[pieceX, pieceY] = null!;
                 _board[moveX, moveY] = currentPiece;
                 currentPiece.Move((moveX, moveY));
+
+                // En passant
+                // if(
+                //     currentPiece.GetType().Name == "Pawn" &&
+                //     ((Pawn)currentPiece).isEnPassant
+                // ){}
                 
                 // End of turn clear
                 ClearPossibleMovesFromBoard();
@@ -130,10 +136,10 @@ namespace Chess
                 _board[0, positions[2, i]] = new Bishop(" W_Bi ", PieceColor.White, (0, positions[2, i]));
                 _board[7, positions[2, i]] = new Bishop(" B_Bi ", PieceColor.Black, (7, positions[2, i]));
             }
-            _board[0, 3] = new Queen(" W_Qu ", PieceColor.White, (0, 3));
-            _board[7, 3] = new Queen(" B_Qu ", PieceColor.Black, (7, 3));
             _board[0, 4] = new King(" W_Ki ", PieceColor.White, (0, 4));
             _board[7, 4] = new King(" B_Ki ", PieceColor.Black, (7, 4));
+            _board[0, 3] = new Queen(" W_Qu ", PieceColor.White, (0, 3));
+            _board[7, 3] = new Queen(" B_Qu ", PieceColor.Black, (7, 3));
         }
 
         private (int X, int Y) GetCoordinatesFromUserInput(string message)
