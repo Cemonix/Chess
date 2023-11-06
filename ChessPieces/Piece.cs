@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Chess
@@ -47,21 +48,61 @@ namespace Chess
             return position;
         }
 
-        public abstract void Move((int X , int Y) position);
+        protected (int X, int Y) MoveForwardRight((int X , int Y) position) => 
+            MoveRight(MoveForward(position));
 
-        public abstract List<(int X, int Y)> GetPossibleMoves(Piece[,] board);
+        protected (int X, int Y) MoveForwardLeft((int X , int Y) position) => 
+            MoveLeft(MoveForward(position));
+
+        protected (int X, int Y) MoveBackwardRight((int X , int Y) position) => 
+            MoveRight(MoveBackward(position));
+
+        protected (int X, int Y) MoveBackwardLeft((int X , int Y) position) => 
+            MoveLeft(MoveBackward(position));
 
         protected bool IsCoorOutOfBoard(int X, int Y)
         {
-            if(X > 7)
+            if(X > 7 || X < 0)
                 return true;
-            else if(X < 0)
-                return true;
-            else if(Y > 7)
-                return true;
-            else if(Y < 0)
+            else if(Y > 7 || Y < 0)
                 return true;
             return false;
         }
+
+        protected void GetPossibleMoveInDirection(
+            Piece[,] board, Func<(int x, int y), (int x, int y)> move, int directionLen = 8
+        )
+        {
+            var newPosition = Position;
+            for (int i = 0; i < directionLen; i++)
+            {   
+                newPosition = move(newPosition);
+                if(IsCoorOutOfBoard(newPosition.X, newPosition.Y))
+                    break;
+                    
+                var boardOnPosition = board[newPosition.X, newPosition.Y];
+                if(boardOnPosition == null)
+                    _possibleMoves.Add(newPosition);
+                else if(boardOnPosition.Color != Color)
+                {
+                    _possibleMoves.Add(newPosition);
+                    break;
+                }
+                else
+                    break;
+            }
+        }
+
+        protected virtual bool CheckBoardPossition(
+            Piece[,] board, (int x, int y) position
+        )
+        {
+            var boardOnPosition = board[position.x, position.y];
+            return boardOnPosition == null || boardOnPosition.Color != Color;
+        }
+
+        public abstract void Move((int X , int Y) position);
+
+        public abstract List<(int X, int Y)> GetPossibleMoves(Piece[,] board);
     }
 }

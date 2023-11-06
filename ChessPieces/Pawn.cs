@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Chess
@@ -17,17 +18,17 @@ namespace Chess
             _possibleMoves.Clear();
 
             // TODO: En passant
-            if(Color == PieceColor.White)
+            Func<(int X, int Y), (int X, int Y)> move = 
+                Color == PieceColor.White ? MoveForward : MoveBackward;
+
+            (int x, int y) forwardMove = move(Position);
+            if(CheckBoardPossition(board, forwardMove))
             {
-                _possibleMoves.Add(MoveForward(Position));
-                if(!isMoved && board[_possibleMoves[0].X, _possibleMoves[0].Y] == null)
-                    _possibleMoves.Add(MoveForward(_possibleMoves[0]));
-            }
-            else
-            {
-                _possibleMoves.Add(MoveBackward(Position));
-                if(!isMoved && board[_possibleMoves[0].X, _possibleMoves[0].Y] == null)
-                    _possibleMoves.Add(MoveBackward(_possibleMoves[0]));
+                _possibleMoves.Add(forwardMove);
+
+                forwardMove = move(_possibleMoves[0]);
+                if(!isMoved && CheckBoardPossition(board, forwardMove))
+                    _possibleMoves.Add(forwardMove);
             }
 
             return _possibleMoves;
@@ -38,6 +39,14 @@ namespace Chess
             if(!isMoved)
                 isMoved = true;
             Position = position;
+        }
+
+        protected override bool CheckBoardPossition(
+            Piece[,] board, (int x, int y) position
+        )
+        {
+            var boardOnPosition = board[position.x, position.y];
+            return boardOnPosition == null;
         }
     }
 }

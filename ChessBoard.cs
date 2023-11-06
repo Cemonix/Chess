@@ -49,7 +49,7 @@ namespace Chess
                 do
                 {
                     (moveX, moveY) = GetCoordinatesFromUserInput(
-                    "Write the coordinates where you would like to move the chosen piece."
+                        "Write the coordinates where you would like to move the chosen piece."
                     );
                 } while (!IsMoveCoorValid(moveX, moveY, piecePossibleMoves));
                 
@@ -58,7 +58,7 @@ namespace Chess
                 currentPiece.Move((moveX, moveY));
                 
                 // End of turn clear
-                ClearPossibleMovesBoard();
+                ClearPossibleMovesFromBoard();
                 _colorOfCurrPlayer = _colorOfCurrPlayer == PieceColor.White ? PieceColor.Black : PieceColor.White;
                 // TODO: check if game end
                 // _isGameEnd = true;
@@ -197,12 +197,7 @@ namespace Chess
                 }
             }
 
-            if(_board[X, Y] is not null && _board[X, Y].Color == _colorOfCurrPlayer)
-            {
-                Console.WriteLine("Cannot move on position where is your other chess piece.");
-                isValid = false;
-            }
-            else if(!isValid)
+            if(!isValid)
                 Console.WriteLine("Cannot move on this position.");
 
             return isValid;
@@ -212,11 +207,12 @@ namespace Chess
         {
             foreach((int X, int Y) in possibleMoves)
             {
-                _possibleMovesBoard[X, Y] = "  **  ";
+                if(_board[X, Y] == null)
+                    _possibleMovesBoard[X, Y] = "  **  ";
             }
         }
 
-        private void ClearPossibleMovesBoard()
+        private void ClearPossibleMovesFromBoard()
         {
              for (int i = 0; i < _possibleMovesBoard.GetLength(0); i++)
             {

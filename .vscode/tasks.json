@@ -13,7 +13,10 @@
             "options": {
                 "cwd": "${workspaceRoot}"
             },
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "close": true
+            }
         }
     ]
 }
