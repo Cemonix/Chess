@@ -13,96 +13,94 @@ namespace Chess
     {
         public string Name { get; set;}
         public PieceColor Color { get; }
-        public (int X, int Y) Position { get; set; }
-        protected List<(int X, int Y)> _possibleMoves;
+        public (int x, int y) Position { get; set; }
+        protected List<(int x, int y)> PossibleMoves { get; set; }
 
-        public Piece(string name, PieceColor color, (int X, int Y) position)
+        public Piece(string name, PieceColor color, (int x, int y) position)
         {
             Name = name;
             Color = color;
             Position = position;
-            _possibleMoves = new List<(int X, int Y)>();
+            PossibleMoves = new List<(int x, int y)>();
         }
 
-        protected (int X, int Y) MoveForward((int X, int Y) position)
+        public virtual void Move((int x, int y) position) => Position = position;
+
+        public abstract List<(int x, int y)> GetPossibleMoves(Piece[,] board);
+
+        protected (int x, int y) MoveForward((int x, int y) position)
         {
-            position.X += 1;
+            position.x += 1;
             return position;
         }
 
-        protected (int X, int Y) MoveBackward((int X, int Y) position)
+        protected (int x, int y) MoveBackward((int x, int y) position)
         {
-            position.X -= 1;
+            position.x -= 1;
             return position;
         }
 
-        protected (int X, int Y) MoveLeft((int X, int Y) position)
+        protected (int x, int y) MoveLeft((int x, int y) position)
         {
-            position.Y -= 1;
+            position.y -= 1;
             return position;
         }
 
-        protected (int X, int Y) MoveRight((int X , int Y) position)
+        protected (int x, int y) MoveRight((int x , int y) position)
         {
-            position.Y += 1;
+            position.y += 1;
             return position;
         }
 
-        protected (int X, int Y) MoveForwardRight((int X , int Y) position) => 
+        protected (int x, int y) MoveForwardRight((int x , int y) position) => 
             MoveRight(MoveForward(position));
 
-        protected (int X, int Y) MoveForwardLeft((int X , int Y) position) => 
+        protected (int x, int y) MoveForwardLeft((int x , int y) position) => 
             MoveLeft(MoveForward(position));
 
-        protected (int X, int Y) MoveBackwardRight((int X , int Y) position) => 
+        protected (int x, int y) MoveBackwardRight((int x , int y) position) => 
             MoveRight(MoveBackward(position));
 
-        protected (int X, int Y) MoveBackwardLeft((int X , int Y) position) => 
+        protected (int x, int y) MoveBackwardLeft((int x , int y) position) => 
             MoveLeft(MoveBackward(position));
 
-        protected bool IsCoorOutOfBoard(int X, int Y)
-        {
-            if(X > 7 || X < 0)
-                return true;
-            else if(Y > 7 || Y < 0)
-                return true;
-            return false;
-        }
-
         protected void GetPossibleMoveInDirection(
-            Piece[,] board, Func<(int x, int y), (int x, int y)> move, int directionLen = 8
-        )
+            Piece[,] board, Func<(int x, int y), (int x, int y)> moveDirection, int maxSteps = 8)
         {
-            var newPosition = Position;
-            for (int i = 0; i < directionLen; i++)
-            {   
-                newPosition = move(newPosition);
-                if(IsCoorOutOfBoard(newPosition.X, newPosition.Y))
+            var currentPosition = Position;
+
+            for (int i = 0; i < maxSteps; i++)
+            {
+                currentPosition = moveDirection(currentPosition);
+
+                if (!IsWithinBoard(currentPosition.x, currentPosition.y))
                     break;
-                    
-                var boardOnPosition = board[newPosition.X, newPosition.Y];
-                if(boardOnPosition == null)
-                    _possibleMoves.Add(newPosition);
-                else if(boardOnPosition.Color != Color)
+
+                if (board[currentPosition.x, currentPosition.y] != null)
                 {
-                    _possibleMoves.Add(newPosition);
+                    // If it's an enemy piece, add the move, but stop there.
+                    if (board[currentPosition.x, currentPosition.y].Color != Color)
+                        PossibleMoves.Add(currentPosition);
+
                     break;
                 }
-                else
-                    break;
+                
+                PossibleMoves.Add(currentPosition);
             }
         }
 
-        protected virtual bool CheckBoardPossition(
-            Piece[,] board, (int x, int y) position
-        )
+        protected bool IsWithinBoard(int x, int y)
         {
-            var boardOnPosition = board[position.x, position.y];
-            return boardOnPosition == null || boardOnPosition.Color != Color;
+            return x >= 0 && x < 8 && y >= 0 && y < 8;
         }
 
-        public abstract void Move((int X , int Y) position);
+        protected bool CanMoveTo(Piece[,] board, int x, int y)
+        {
+            if (!IsWithinBoard(x, y))
+                return false;
 
-        public abstract List<(int X, int Y)> GetPossibleMoves(Piece[,] board);
+            var targetPiece = board[x, y];
+            return targetPiece == null || targetPiece.Color != Color;
+        }
     }
 }

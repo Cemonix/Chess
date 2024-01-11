@@ -4,21 +4,19 @@ namespace Chess
 {
     class Bishop : Piece
     {
-        public Bishop(string name, PieceColor color, (int X, int Y) position) :
+        public Bishop(string name, PieceColor color, (int x, int y) position) :
             base(name, color, position) {}
 
-        public override List<(int X, int Y)> GetPossibleMoves(Piece[,] board)
+        public override List<(int x, int y)> GetPossibleMoves(Piece[,] board)
         {
-            _possibleMoves.Clear();
+            PossibleMoves.Clear();
             
             GetPossibleMoveInDirection(board, MoveForwardRight);
             GetPossibleMoveInDirection(board, MoveForwardLeft);
             GetPossibleMoveInDirection(board, MoveBackwardRight);
             GetPossibleMoveInDirection(board, MoveBackwardLeft);
 
-            return _possibleMoves;
+            return PossibleMoves;
         }
-
-        public override void Move((int X, int Y) position) => Position = position;
     }
 }

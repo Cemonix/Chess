@@ -4,12 +4,12 @@ namespace Chess
 {
     class Knight : Piece
     {
-        public Knight(string name, PieceColor color, (int X, int Y) position) :
+        public Knight(string name, PieceColor color, (int x, int y) position) :
             base(name, color, position) {}
 
-        public override List<(int X, int Y)> GetPossibleMoves(Piece[,] board)
+        public override List<(int x, int y)> GetPossibleMoves(Piece[,] board)
         {   
-            _possibleMoves.Clear();
+            PossibleMoves.Clear();
             
             List<(int x, int y)> possiblePositions = new()
             {
@@ -25,16 +25,11 @@ namespace Chess
 
             for (int i = 0; i < possiblePositions.Count; i++)
             {
-                if(
-                    !IsCoorOutOfBoard(possiblePositions[i].x, possiblePositions[i].y) && 
-                    CheckBoardPossition(board, possiblePositions[i])
-                )
-                    _possibleMoves.Add((possiblePositions[i].x, possiblePositions[i].y));
+                if(CanMoveTo(board, possiblePositions[i].x, possiblePositions[i].y))
+                    PossibleMoves.Add((possiblePositions[i].x, possiblePositions[i].y));
             }
 
-            return _possibleMoves;
+            return PossibleMoves;
         }
-
-        public override void Move((int X, int Y) position) => Position = position;
     }
 }

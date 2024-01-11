@@ -4,16 +4,16 @@ namespace Chess
 {
     class King : Piece
     {
-        public King(string name, PieceColor color, (int X, int Y) position) :
+        public King(string name, PieceColor color, (int x, int y) position) :
             base(name, color, position) {}
 
-        public override List<(int X, int Y)> GetPossibleMoves(Piece[,] board)
+        public override List<(int x, int y)> GetPossibleMoves(Piece[,] board)
         {
             // TODO: Castling
             // TODO: Check mate - must not step into field where enemy can move 
             //       (go through every enemy piece on board and set each possible move to -1, -1
             //        if enemy can move there)
-            _possibleMoves.Clear();
+            PossibleMoves.Clear();
 
             GetPossibleMoveInDirection(board, MoveForward, 1);
             GetPossibleMoveInDirection(board, MoveBackward, 1);
@@ -24,9 +24,7 @@ namespace Chess
             GetPossibleMoveInDirection(board, MoveBackwardRight, 1);
             GetPossibleMoveInDirection(board, MoveBackwardLeft, 1);
 
-            return _possibleMoves;
+            return PossibleMoves;
         }
-
-        public override void Move((int X, int Y) position) => Position = position;
     }
 }
