@@ -49,13 +49,13 @@ namespace Chess
             var allCurrentPlayersMoves = GetAllPlayerPossibleMoves(_currentPlayerColor);
             var allOpponentPlayersMoves = GetAllPlayerPossibleMoves(GetOppositeColor(_currentPlayerColor));
 
-            allCurrentPlayersMoves = FilterPlayerPossibleMoves(
-                allCurrentPlayersMoves, allOpponentPlayersMoves
-            );
+            allCurrentPlayersMoves = FilterPlayerPossibleMoves(allCurrentPlayersMoves);
 
-            bool isKingUnderAttack = IsKingUnderAttack(
-                _currentPlayerColor, allOpponentPlayersMoves
+            King king = GetKing(_currentPlayerColor);
+            bool isKingUnderAttack = king.IsKingUnderAttack(
+                allOpponentPlayersMoves
             );
+            
             if (allCurrentPlayersMoves.Count == 0)
             {
                 if (isKingUnderAttack)
@@ -202,12 +202,11 @@ namespace Chess
         }
 
         private Dictionary<(int X, int Y), List<(int X, int Y)>> FilterPlayerPossibleMoves(
-            Dictionary<(int X, int Y), List<(int X, int Y)>> currentPlayerPossibleMoves,
-            Dictionary<(int X, int Y), List<(int X, int Y)>> opponentPlayerPossibleMoves
+            Dictionary<(int X, int Y), List<(int X, int Y)>> playerPossibleMoves
         )
         {
             var filteredPlayerMoves = new Dictionary<(int X, int Y), List<(int X, int Y)>>();
-            foreach (var possibleMovesPair in currentPlayerPossibleMoves)
+            foreach (var possibleMovesPair in playerPossibleMoves)
             {
                 (int x, int y) = possibleMovesPair.Key;
                 var filteredPossibleMoves = possibleMovesPair.Value
@@ -236,7 +235,8 @@ namespace Chess
             _board[move.x, move.y] = piece;
 
             var allOpponentMoves = GetAllPlayerPossibleMoves(GetOppositeColor(_currentPlayerColor));
-            bool isInCheck = IsKingUnderAttack(piece.Color, allOpponentMoves);
+            King king = GetKing(_currentPlayerColor);
+            bool isInCheck = king.IsKingUnderAttack(allOpponentMoves);
 
             // Revert to original state
             piece.Position = (x, y);
@@ -244,22 +244,7 @@ namespace Chess
             _board[move.x, move.y] = targetPositionPiece;
 
             return isInCheck;
-        }
-
-        private bool IsKingUnderAttack(
-            PieceColor kingColor, Dictionary<(int x, int y), List<(int x, int y)>> allOpponentMoves
-        )
-        {
-            King king = GetKing(kingColor);
-
-            foreach (var moves in allOpponentMoves.Values)
-            {
-                if (moves.Contains(king.Position))
-                    return true;    
-            }
-
-            return false;
-        }
+        } 
 
         private void HandlePawnPromotion(Pawn pawn, (int X, int Y) position)
         {
@@ -397,6 +382,89 @@ namespace Chess
             throw new Exception("King was not found on the board.");
         }
 
+        private List<(int x, int y)> GetCastlingMovesForKing(King king)
+        {
+            var castlingMoves = new List<(int x, int y)>();
+            if (
+                king.HasMoved ||
+                king.IsKingUnderAttack(GetAllPlayerPossibleMoves(GetOppositeColor(king.Color)))
+            )
+            {
+                return castlingMoves;
+            }
+
+            // Check Kingside Castling
+            if (CanCastle(king, 7))
+            {
+                castlingMoves.Add((king.Position.x, 6));
+            }
+
+            // Check Queenside Castling
+            if (CanCastle(king, 0))
+            {
+                castlingMoves.Add((king.Position.x, 2));
+            }
+
+            return castlingMoves;
+        }
+
+        private bool CanCastle(King king, int rookColumn)
+        {
+            int pathStart = king.Position.y < rookColumn ? king.Position.y + 1 : rookColumn + 1;
+            int pathEnd = king.Position.y < rookColumn ? rookColumn - 1 : king.Position.y - 1;
+
+            // Check if the path between the king and the rook is clear
+            for (int column = pathStart; column <= pathEnd; column++)
+            {
+                if (_board[king.Position.x, column] != null)
+                {
+                    return false;
+                }
+            }
+
+            // Check if the rook has moved
+            if (_board[king.Position.x, rookColumn] is not Rook rook || rook.HasMoved)
+            {
+                return false;
+            }
+
+            // Check if any squares that the king passes through are under attack
+            for (
+                int column = king.Position.y;
+                column != rookColumn;
+                column += rookColumn > king.Position.y ? 1 : -1
+            )
+            {
+                if (
+                    IsSquareUnderAttack(
+                        (king.Position.x, column),
+                        GetAllPlayerPossibleMoves(GetOppositeColor(king.Color))
+                    )
+                )
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsSquareUnderAttack(
+            (int x, int y) square, Dictionary<(int x, int y), List<(int x, int y)>> allOpponentMoves
+        )
+        {
+            // Check if the given square is in the list of moves for any of the opponent's pieces
+            foreach (var pieceMoves in allOpponentMoves.Values)
+            {
+                if (pieceMoves.Contains(square))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void CreateChessPiecesAndFillBoard()
         {
             for (int i = 0; i < 8; i++)
@@ -421,8 +489,8 @@ namespace Chess
                 _board[0, positions[2, i]] = new Bishop(" W_Bi ", PieceColor.White, (0, positions[2, i]));
                 _board[7, positions[2, i]] = new Bishop(" B_Bi ", PieceColor.Black, (7, positions[2, i]));
             }
-            _board[0, 4] = new King(" W_Ki ", PieceColor.White, (0, 4));
-            _board[7, 4] = new King(" B_Ki ", PieceColor.Black, (7, 4));
+            _board[0, 4] = new King(" W_Ki ", PieceColor.White, (0, 4), GetCastlingMovesForKing);
+            _board[7, 4] = new King(" B_Ki ", PieceColor.Black, (7, 4), GetCastlingMovesForKing);
             _board[0, 3] = new Queen(" W_Qu ", PieceColor.White, (0, 3));
             _board[7, 3] = new Queen(" B_Qu ", PieceColor.Black, (7, 3));
         }

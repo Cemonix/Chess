@@ -8,13 +8,13 @@ namespace Chess
         public delegate void PromotionHandler(Pawn pawn, (int X, int Y) position);
 
         public event PromotionHandler? OnPromotion;
-        private bool isMoved;
+        public bool HasMoved { get; private set; }
         public bool isEnPassant;
 
         public Pawn(string name, PieceColor color, (int x, int y) position) :
             base(name, color, position)
         {
-            isMoved = false;
+            HasMoved = false;
             isEnPassant = false;
         }
 
@@ -31,7 +31,7 @@ namespace Chess
                 PossibleMoves.Add(forwardMove);
 
                 forwardMove = move(PossibleMoves[0]);
-                if(!isMoved && CanMoveTo(board, forwardMove.x, forwardMove.y))
+                if(!HasMoved && CanMoveTo(board, forwardMove.x, forwardMove.y))
                     PossibleMoves.Add(forwardMove);
             }
             
@@ -48,8 +48,7 @@ namespace Chess
         public override void Move((int x, int y) position)
         {
             base.Move(position);
-
-            isMoved = true;
+            HasMoved = true;
 
             if (
                 (Color == PieceColor.White && position.x == 7) ||
