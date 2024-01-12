@@ -12,5 +12,4 @@
 
 // TODO: En passant - null enemy piece if pawn moved
 // TODO: Castling
-// TODO: Game restart
 // TODO: Chess bot
