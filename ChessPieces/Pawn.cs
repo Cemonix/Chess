@@ -78,6 +78,15 @@ namespace Chess
             }
         }
 
+        protected override bool CanMoveTo(Piece[,] board, int x, int y)
+        {
+            if (!IsWithinBoard(x, y))
+                return false;
+
+            var targetPiece = board[x, y];
+            return targetPiece == null;
+        }
+
         private void EnPassant(
             Piece[,] board, Func<(int x, int y), (int x, int y)> move,
             Func<(int x, int y), (int x, int y)> passantDirection

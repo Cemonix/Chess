@@ -10,9 +10,6 @@ namespace Chess
         public override List<(int x, int y)> GetPossibleMoves(Piece[,] board)
         {
             // TODO: Castling
-            // TODO: Check mate - must not step into field where enemy can move 
-            //       (go through every enemy piece on board and set each possible move to -1, -1
-            //        if enemy can move there)
             PossibleMoves.Clear();
 
             GetPossibleMoveInDirection(board, MoveForward, 1);

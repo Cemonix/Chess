@@ -10,8 +10,7 @@
     }
 }
 
-// TODO: King possible moves cannot be places where he is in danger
 // TODO: En passant - null enemy piece if pawn moved
 // TODO: Castling
-// TODO: Game end, restart
+// TODO: Game restart
 // TODO: Chess bot

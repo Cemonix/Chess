@@ -94,7 +94,7 @@ namespace Chess
             return x >= 0 && x < 8 && y >= 0 && y < 8;
         }
 
-        protected bool CanMoveTo(Piece[,] board, int x, int y)
+        protected virtual bool CanMoveTo(Piece[,] board, int x, int y)
         {
             if (!IsWithinBoard(x, y))
                 return false;

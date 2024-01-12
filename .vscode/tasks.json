@@ -15,7 +15,7 @@
             },
             "problemMatcher": "$msCompile",
             "presentation": {
-                "close": true
+                "close": false
             }
         }
     ]
