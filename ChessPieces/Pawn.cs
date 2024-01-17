@@ -9,13 +9,13 @@ namespace Chess
 
         public event PromotionHandler? OnPromotion;
         public bool HasMoved { get; private set; }
-        public bool isEnPassant;
+        public bool HasMovedTwoSquares { get; set; }
 
         public Pawn(string name, PieceColor color, (int x, int y) position) :
             base(name, color, position)
         {
             HasMoved = false;
-            isEnPassant = false;
+            HasMovedTwoSquares = false;
         }
 
         public override List<(int x, int y)> GetPossibleMoves(Piece[,] board)
@@ -38,9 +38,11 @@ namespace Chess
             AttackInDirection(board, move, MoveLeft);
             AttackInDirection(board, move, MoveRight);
 
-            // isEnPassant = false;
-            // EnPassant(board, move, MoveRight);
-            // EnPassant(board, move, MoveLeft);
+            var enPassantMove = GetEnPassantPossibleMove(board);
+            if (enPassantMove.HasValue)
+            {
+                PossibleMoves.Add(enPassantMove.Value);
+            }
 
             return PossibleMoves;
         }
@@ -59,6 +61,48 @@ namespace Chess
             }
         }
 
+        public bool IsTwoSquareMove(int moveX)
+        {
+            if (!HasMoved && Math.Abs(Position.x - moveX) == 2)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public (int x, int y)? GetEnPassantPossibleMove(Piece[,] board)
+        {
+            int direction = Color == PieceColor.White ? 1 : -1;
+            
+            if (
+                IsWithinBoard(Position.x, Position.y - 1) &&
+                board[Position.x, Position.y - 1] is Pawn pawnLeft && 
+                pawnLeft.HasMovedTwoSquares
+            )
+            {
+                return (Position.x + direction, Position.y - 1);
+            }
+            else if (
+                IsWithinBoard(Position.x, Position.y + 1) &&
+                board[Position.x, Position.y + 1] is Pawn pawnRight &&
+                pawnRight.HasMovedTwoSquares
+            )
+            {
+                return (Position.x + direction, Position.y + 1);
+            }
+
+            return null;
+        }
+
+        protected override bool CanMoveTo(Piece[,] board, int x, int y)
+        {
+            if (!IsWithinBoard(x, y))
+                return false;
+
+            var targetPiece = board[x, y];
+            return targetPiece == null;
+        }
+
         private void AttackInDirection(
             Piece[,] board, Func<(int x, int y), (int x, int y)> move,
             Func<(int x, int y), (int x, int y)> attackDirection
@@ -74,36 +118,6 @@ namespace Chess
                 {
                     PossibleMoves.Add(attack);
                 }
-            }
-        }
-
-        protected override bool CanMoveTo(Piece[,] board, int x, int y)
-        {
-            if (!IsWithinBoard(x, y))
-                return false;
-
-            var targetPiece = board[x, y];
-            return targetPiece == null;
-        }
-
-        private void EnPassant(
-            Piece[,] board, Func<(int x, int y), (int x, int y)> move,
-            Func<(int x, int y), (int x, int y)> passantDirection
-        )
-        {
-            // TODO: Check if white piece is at 5 line or black piece at 4 line
-            // TODO: Check if enemy pawn moved 2 spaces in last turn (this condition is hard to check)
-            char enemyColor = Color == PieceColor.White ? 'B' : 'W';
-
-            (int passantMovex, int passantMovey) = (Position.x, Position.y + 1);
-            if(IsWithinBoard(passantMovex, passantMovey))
-            {
-                if(
-                    board[passantMovex, passantMovey] != null &&
-                    board[passantMovex, passantMovey].Name == $" {enemyColor}_Pa "
-                )
-                    PossibleMoves.Add(passantDirection(move(Position)));
-                    isEnPassant = true;
             }
         }
     }

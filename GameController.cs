@@ -30,9 +30,12 @@ namespace Chess
                 {
                     ChessBoard.ClearPossibleMovesFromBoard();
                     ChessBoard.DrawBoard();
+                    ResetPawnTwoSquareMove();
 
                     Console.WriteLine($"It is {_currentPlayerColor}'s turn.");
                     Turn();
+
+                    _currentPlayerColor = GetOppositeColor(_currentPlayerColor);
                 }
                 
                 _currentPlayerColor = PieceColor.White;
@@ -106,54 +109,89 @@ namespace Chess
 
                 ChessBoard.AddPossibleMovesToBoard(piecePossibleMoves);
                 ChessBoard.DrawBoard();
-                
-                bool isCastlingMove;
 
                 // Move chosen chess piece
                 int moveX, moveY;
                 do
                 {
-                    isCastlingMove = false;
-
                     (moveX, moveY) = GetCoordinatesFromUserInput(
                         "Write the coordinates where you would like to move the chosen piece."
                     );
 
-                    if (chosenPiece is King chosenKing && !chosenKing.HasMoved)
+                    // Castling
+                    if (
+                        chosenPiece is King chosenKing &&
+                        !chosenKing.HasMoved &&
+                        castlingMoves.Contains((moveX, moveY))
+                    )
                     {
-                        isCastlingMove = castlingMoves.Contains((moveX, moveY));
+                        Castling(moveX, moveY);
+
+                    }
+
+                    // En Passant
+                    if (chosenPiece is Pawn enPassantPawn)
+                    {
+                        var enPassantMove = enPassantPawn.GetEnPassantPossibleMove(Board);
+                        if (
+                            enPassantMove.HasValue &&
+                            moveX == enPassantMove.Value.x &&
+                            moveY == enPassantMove.Value.y
+                        )
+                        {
+                            EnPassant(moveX, moveY);
+                        }
                     }
                 } while (!ChessBoard.IsMoveCoorValid(moveX, moveY, piecePossibleMoves));
-                
-                // If castling move with rook as well
-                if (isCastlingMove)
+                           
+                if (Board[chosenPieceCoor.x, chosenPieceCoor.y] is Pawn pawn)
                 {
-                    // Determine which side the castling is on based on the king's final position
-                    bool isKingside = moveY == 6;
-
-                    // True king's side, false queen's side
-                    int rookInitialY = isKingside ? 7 : 0;
-                    int rookFinalY = isKingside ? 5 : 3;
-
-                    // Move the Rook
-                    Rook rook = (Rook)Board[moveX, rookInitialY];
-                    Board[moveX, rookInitialY] = null!;
-                    Board[moveX, rookFinalY] = rook;
-                    rook.Move((moveX, rookFinalY));
+                    if (pawn.IsTwoSquareMove(moveX))
+                    {
+                        pawn.HasMovedTwoSquares = true;
+                    }
                 }
 
                 Board[chosenPieceCoor.x, chosenPieceCoor.y] = null!;
                 Board[moveX, moveY] = chosenPiece;
                 chosenPiece.Move((moveX, moveY));
+            }
+        }
 
-                // En passant
-                // if(
-                //     currentPiece.GetType().Name == "Pawn" &&
-                //     ((Pawn)currentPiece).isEnPassant
-                // ){}
-                
-                // End of turn clear
-                _currentPlayerColor = GetOppositeColor(_currentPlayerColor);
+        private void Castling(int kingMoveX, int kingMoveY)
+        {
+            // Determine which side the castling is on based on the king's final position
+            bool isKingside = kingMoveY == 6;
+
+            // True king's side, false queen's side
+            int rookInitialY = isKingside ? 7 : 0;
+            int rookFinalY = isKingside ? 5 : 3;
+
+            // Move the Rook
+            Rook rook = (Rook)Board[kingMoveX, rookInitialY];
+            Board[kingMoveX, rookInitialY] = null!;
+            Board[kingMoveX, rookFinalY] = rook;
+            rook.Move((kingMoveX, rookFinalY));
+        }
+
+        private void EnPassant(int movedX, int movedY)
+        {
+            // Determine the position of the captured pawn
+            int capturedPawnX = _currentPlayerColor == PieceColor.White ?
+                movedX - 1 : movedX + 1;
+
+            // Remove the captured pawn from the board
+            Board[capturedPawnX, movedY] = null!;
+        }
+
+        private void ResetPawnTwoSquareMove()
+        {
+            foreach (Piece piece in Board)
+            {
+                if (piece is Pawn pawn && pawn.Color == _currentPlayerColor)
+                {
+                    pawn.HasMovedTwoSquares = false;
+                }
             }
         }
 

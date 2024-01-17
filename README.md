@@ -28,10 +28,6 @@ To play the game, follow these instructions:
 - Enjoy the game and have fun challenging your opponent!
 
 ## In Progress
-- [ ] Implement **Castling**:
-  - [ ] Kingside castling
-  - [ ] Queenside castling
-- [ ] Implement **En Passant** capture
 - [ ] Develop a **Chess Bot** for single-player mode:
   - [ ] Implement basic AI for chess bot
   - [ ] Advanced AI features (optional)
