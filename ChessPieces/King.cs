@@ -6,15 +6,12 @@ namespace Chess
     class King : Piece
     {
         public bool HasMoved { get; private set; }
-        private readonly Func<King, List<(int x, int y)>> _getCastlingMoves;
 
         public King(
-            string name, PieceColor color, (int x, int y) position,
-            Func<King, List<(int x, int y)>> getCastlingMoves
+            string name, PieceColor color, (int x, int y) position
         ) : base(name, color, position) 
         {
             HasMoved = false;
-            _getCastlingMoves = getCastlingMoves;
         }
 
         public override List<(int x, int y)> GetPossibleMoves(Piece[,] board)
@@ -30,12 +27,6 @@ namespace Chess
             GetPossibleMoveInDirection(board, MoveBackwardRight, 1);
             GetPossibleMoveInDirection(board, MoveBackwardLeft, 1);
 
-            // FIXME: infinite recursion - will need refactor of chessBoard class - split into:
-            //  1) chessBoard
-            //  2) game manager
-            // Castling 
-            // PossibleMoves.AddRange(_getCastlingMoves(this));
-
             return PossibleMoves;
         }
 
@@ -45,17 +36,76 @@ namespace Chess
             HasMoved = true;
         }
 
-        public bool IsKingUnderAttack(
-            Dictionary<(int x, int y), List<(int x, int y)>> allOpponentMoves
+        public List<(int x, int y)> GetCastlingMoves(
+            Piece[,] board,
+            Dictionary<(int x, int y), List<(int x, int y)>> opponentPossibleMoves
         )
         {
-            foreach (var moves in allOpponentMoves.Values)
+            var castlingMoves = new List<(int x, int y)>();
+            if (
+                HasMoved ||
+                ChessBoard.IsSquareUnderAttack(Position, opponentPossibleMoves) // Is king square under attack
+            )
             {
-                if (moves.Contains(Position))
-                    return true;    
+                return castlingMoves;
             }
 
-            return false;
+            // Check Kingside Castling
+            if (CanCastle(board, 7, opponentPossibleMoves))
+            {
+                castlingMoves.Add((Position.x, 6));
+            }
+
+            // Check Queenside Castling
+            if (CanCastle(board, 0, opponentPossibleMoves))
+            {
+                castlingMoves.Add((Position.x, 2));
+            }
+
+            return castlingMoves;
+        }
+
+        public bool CanCastle(
+            Piece[,] board, int rookColumn,
+            Dictionary<(int x, int y), List<(int x, int y)>> opponentPossibleMoves
+        )
+        {
+            int pathStart = Position.y < rookColumn ? Position.y + 1 : rookColumn + 1;
+            int pathEnd = Position.y < rookColumn ? rookColumn - 1 : Position.y - 1;
+
+            // Check if the path between the king and the rook is clear
+            for (int column = pathStart; column <= pathEnd; column++)
+            {
+                if (board[Position.x, column] != null)
+                {
+                    return false;
+                }
+            }
+
+            // Check if the rook has moved
+            if (board[Position.x, rookColumn] is not Rook rook || rook.HasMoved)
+            {
+                return false;
+            }
+
+            // Check if any squares that the king passes through are under attack
+            for (
+                int column = Position.y;
+                column != rookColumn;
+                column += rookColumn > Position.y ? 1 : -1
+            )
+            {
+                if (
+                    ChessBoard.IsSquareUnderAttack(
+                        (Position.x, column), opponentPossibleMoves
+                    )
+                )
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

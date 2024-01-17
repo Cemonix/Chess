@@ -4,7 +4,7 @@
     {
         static void Main(string[] args)
         {
-            ChessBoard chessBoard = new();
+            GameController chessBoard = new();
             chessBoard.Game();
         }
     }
