@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Chess
 {
-    class GameController
+    internal class GameController
     {
         public ChessBoard ChessBoard { get; private set; }
         public Piece[,] Board { get; private set; }

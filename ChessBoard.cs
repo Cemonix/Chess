@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Chess
 {
-    class ChessBoard
+    internal class ChessBoard
     {
-        private const string _boardLetters  = "ABCDEFGH";
-        private readonly Piece[,] _board;
-        private readonly string[,] _possibleMovesBoard;
-        private readonly int _padding_len;
+        private const string BoardLetters  = "ABCDEFGH";
+        private readonly Piece?[,] _board;
+        private readonly string?[,] _possibleMovesBoard;
+        private readonly int _paddingLen;
         public ChessBoard(Piece[,] board)
         {
             _board = board;
             _possibleMovesBoard = new string[8, 8];
-            _padding_len = 6; // Length of chess piece names
+            _paddingLen = 6; // Length of chess piece names
         }
 
         public void DrawBoard()
         {
-            string padding = new(' ', _padding_len);
+            string padding = new(' ', _paddingLen);
             for (int i = 0; i < _board.GetLength(0); i++)
             {
                 for (int j = 0; j < _board.GetLength(0); j++)
@@ -32,20 +31,19 @@ namespace Chess
 
                     // Draw empty tile or tile with possible move
                     if (_board[i, j] is null)
-                        if(_possibleMovesBoard[i, j] is null)
-                            Console.Write(padding);
-                        else
-                            Console.Write(_possibleMovesBoard[i, j]);
+                    {
+                        Console.Write(_possibleMovesBoard[i, j] ?? padding);
+                    }
                     else
                     {
-                        int piece_pad_len = _padding_len - _board[i, j].Name.Length;
-                        if(piece_pad_len != 0)
+                        var piecePadLen = _paddingLen - _board[i, j]!.Name.Length;
+                        if(piecePadLen != 0)
                         {
-                            string piece_padding = new(' ',  (piece_pad_len - 1) / 2 + 1);
-                            Console.Write(piece_padding + _board[i, j].Name + piece_padding);
+                            string piecePadding = new(' ',  (piecePadLen - 1) / 2 + 1);
+                            Console.Write(piecePadding + _board[i, j]?.Name + piecePadding);
                         }
                         else
-                            Console.Write(_board[i, j].Name);
+                            Console.Write(_board[i, j]?.Name);
                         
                     }
                 }
@@ -53,8 +51,8 @@ namespace Chess
             }
 
             // Board last line letters
-            Console.WriteLine(new string('-', 2 + (_padding_len + 1) * 8));
-            foreach (char letter in _boardLetters)
+            Console.WriteLine(new string('-', 2 + (_paddingLen + 1) * 8));
+            foreach (char letter in BoardLetters)
             {
                 if(letter == 'A')
                     Console.Write(" |  " + letter);
@@ -72,7 +70,7 @@ namespace Chess
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    if(_boardLetters[j] + (i + 1).ToString() == coordinates.ToUpper())
+                    if (BoardLetters[j] + (i + 1).ToString() == coordinates.ToUpper())
                     {
                         mappedCoord = (i, j);
                         return mappedCoord;
@@ -89,7 +87,7 @@ namespace Chess
                 Console.WriteLine("No chess piece on given coordinates.");
                 return false;
             }
-            else if(_board[x, y].Color != currentPlayer)
+            else if(_board[x, y]!.Color != currentPlayer)
             {
                 Console.WriteLine("This piece does not belong to you.");
                 return false;
@@ -161,15 +159,7 @@ namespace Chess
         )
         {
             // Check if the given square is in the list of moves for any of the opponent's pieces
-            foreach (var pieceMoves in allOpponentMoves.Values)
-            {
-                if (pieceMoves.Contains(square))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return allOpponentMoves.Values.Any(pieceMoves => pieceMoves.Contains(square));
         }
     }
 }
